@@ -1,10 +1,13 @@
 import pypdfium2 as pdfium
 from io import BytesIO
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from pytesseract import image_to_string
 from PIL import Image
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def convert_pdf_to_images(file_path, scale=300/72):
 

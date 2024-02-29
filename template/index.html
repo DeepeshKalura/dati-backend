@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dati Product Backend Documentation</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+    .container {
+        text-align: center;
+    }
+    h1 {
+        color: #333;
+    }
+    p {
+        color: #666;
+        margin-bottom: 20px;
+    }
+    button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 0 10px;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+    }
+    button:hover {
+        background-color: #45a049;
+    }
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Dati Product Backend Documentation</h1>
+        <p>Explore the API documentation:</p>
+        <button onclick="redirectToDocs()">Go to Docs</button>
+        <button onclick="redirectToRedoc()">Go to Redoc</button>
+    </div>
+
+    <script>
+        function redirectToDocs() {
+            window.location.href = "/docs";
+        }
+
+        function redirectToRedoc() {
+            window.location.href = "/redoc";
+        }
+    </script>
+</body>
+</html>

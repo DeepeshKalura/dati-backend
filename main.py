@@ -1,7 +1,5 @@
 from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import FileResponse
-from typing import Annotated
 import json
 
 from app.logic import convert_pdf_to_images, extract_text_from_img, extract_structured_data

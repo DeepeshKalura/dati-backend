@@ -27,7 +27,7 @@ async def create_upload_file(file: UploadFile = File(...), data: Optional[str] =
         }"""
 
     else :
-        data_points = json.dumps(data)
+        data_points = data
         print(data_points)
     
     with open(file.filename, "wb") as buffer:
@@ -39,8 +39,8 @@ async def create_upload_file(file: UploadFile = File(...), data: Optional[str] =
     pdf_image_list = convert_pdf_to_images(path)
     pdf_text_list = extract_text_from_img(pdf_image_list)
     
-    data = extract_structured_data(pdf_text_list, data_points)
-    json_data = json.loads(data)
+    extract_data = extract_structured_data(pdf_text_list, data_points)
+    json_data = json.loads(extract_data)
     if isinstance(json_data, list):
         results.extend(json_data) 
     else:
@@ -48,7 +48,3 @@ async def create_upload_file(file: UploadFile = File(...), data: Optional[str] =
         
     
     return results
-
-@app.route("/just_for_fun")
-async def just_for_fun(file: UploadFile = File(...)):
-    return {"message": "Hello World"}

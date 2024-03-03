@@ -1,13 +1,12 @@
-from app.ocr import convert_pdf_to_images
+import os
 import google.generativeai as genai
 from pathlib import Path
 import pypdfium2 as pdfium
-from io import BytesIO
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-from langchain_core.messages import HumanMessage
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
 
+
+genai.configure(api_key = os.getenv('Gemini_Key'))
 generation_config = {
   "temperature": 0.4,
   "top_p": 1,
@@ -59,7 +58,6 @@ def convert_pdf_to_images(file_path: str, scale: float = 300/72):
 
 
 def extract_structured_data(data_points):
-    llm = ChatGoogleGenerativeAI(model= "gemini-1.0-pro-vision-latest")
     
     # content = input_image_setup(image_list)
     content = [
@@ -127,7 +125,7 @@ data_points = """{
         }"""
 
 
-game = extract_structured_data(data_points)
+# game = extract_structured_data(data_points)
 # print(game)
 
 #print(image_parts) 

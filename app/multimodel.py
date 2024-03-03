@@ -1,9 +1,12 @@
-import os
-from pathlib import Path
+from app.ocr import convert_pdf_to_images
 import google.generativeai as genai
-
-
-genai.configure(api_key = os.getenv('Gemini_Key'))
+from pathlib import Path
+import pypdfium2 as pdfium
+from io import BytesIO
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+from langchain_core.messages import HumanMessage
 
 generation_config = {
   "temperature": 0.4,
@@ -28,46 +31,103 @@ safety_settings = [
   {
     "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
     "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-  }
+  },
 ]
 
-input_prompt = """
-               You are an expert in understanding invoices.
-               You will receive input images as invoices &
-               you will have to answer questions based on the input image
-               """
+model = genai.GenerativeModel(model_name="gemini-1.0-pro-vision-latest",
+                              generation_config=generation_config,
+                              safety_settings=safety_settings)
 
-model = genai.GenerativeModel(model_name = "gemini-pro-vision", generation_config = generation_config, safety_settings = safety_settings)
+def convert_pdf_to_images(file_path: str, scale: float = 300/72):
 
-def input_image_setup(file_loc):
-    if not (img := Path(file_loc)).exists():
-        raise FileNotFoundError(f"Could not find image: {img}")
+    pdf_file = pdfium.PdfDocument(file_path)
 
-    image_parts = [
-        {
-            "mime_type": "image/jpeg",
-            "data": Path(file_loc).read_bytes()
-            }
-        ]
-    return image_parts
+    page_indices = [i for i in range(len(pdf_file))]
 
-def extract_text_from_img_gemini(list_dict_final_images:list, data_poinsts: str):
-    image_list = [list(data.values())[0] for data in list_dict_final_images]
-    response = []
-    for index, image_bytes in enumerate(image_list):
-        image_parts = [
-        {
-            "mime_type": "image/jpeg",
-            "data": image_bytes
-            }
-        ]
+    renderer = pdf_file.render(
+        pdfium.PdfBitmap.to_pil,
+        page_indices=page_indices,
+        scale=scale,
+    )
 
-        res = generate_gemini_response(input_prompt, image_parts, data_poinsts)
+    # final_images = []
 
-        response.append(res)
-        print(response)
-        return response
-        
-def generate_gemini_response(input_prompt, image_parts, data_points):
-    response = model.predict(input_prompt, image_parts, data_points)
-    return response.txt
+    for i, image in zip(page_indices, renderer):
+        # final_images.append(image)
+        image.save(f"invoice_{i}.jpeg", format='jpeg', optimize=True)
+    # return final_images
+
+
+def extract_structured_data(data_points):
+    llm = ChatGoogleGenerativeAI(model= "gemini-1.0-pro-vision-latest")
+    
+    # content = input_image_setup(image_list)
+    content = [
+       {
+          "mime_type": "image/jpeg",
+          "data" : Path(f"invoice_0.jpeg").read_bytes()
+       },
+    ]
+
+    prompt = [
+       "You are an expert admin people who will extract core information from documents",
+       {
+          "mime_type": "image/jpeg",
+          "data" : Path(f"invoice_0.jpeg").read_bytes()
+       },
+       "Above is the content; Image please try to extract all data points from the content above and export in a JSON array format: ",
+        data_points,
+        "Now please extract details from the content  and export in a JSON array format, return ONLY the JSON array:"
+    ]
+    
+    # template = f"""
+    # You are an expert admin people who will extract core information from documents
+
+    # {content}
+
+    # Above is the content; Binary Image please try to extract all data points from the content above
+    # and export in a JSON array format:
+    # {data_points}
+
+    # Now please extract details from the content  and export in a JSON array format,
+    # return ONLY the JSON array:
+    # """
+
+    # prompt = PromptTemplate(
+    #     input_variables=["content", "data_points"],
+    #     template=template,
+    # )
+
+    # chain = LLMChain(llm=llm, prompt=prompt)
+    
+
+    results = model.generate_content(prompt)
+    return (results.text)
+    # return results
+
+
+# def input_image_setup(image_list):
+#   image_parts = []
+#   for image_data in image_list:
+#     # print(type(image_data))
+#     data = {
+#         "mine_type": "image.jpeg",
+#         "data" : image_data.tobytes()
+#     }
+#     image_parts.append(data)
+#   return image_parts
+
+# res = convert_pdf_to_images(file_path="invoice.pdf")
+
+data_points = """{
+            "invoice_item": "what is the item that charged",
+            "Amount": "how much does the invoice item cost in total",
+            "Company_name": "company that issued the invoice",
+            "invoice_date": "when was the invoice issued",
+        }"""
+
+
+game = extract_structured_data(data_points)
+# print(game)
+
+#print(image_parts) 

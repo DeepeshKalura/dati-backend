@@ -6,7 +6,7 @@ from typing import Optional, Dict
 import json
 
 from app.ocr import convert_pdf_to_images, extract_text_from_img, extract_structured_data
-
+from app.schema import Item
 import app.multimodel as mm
 
 
@@ -19,7 +19,8 @@ async def read_root():
 
 
 @app.post("/autmoate/ocr/")
-async def ocr_upload_file(file: UploadFile = File(...), data: Optional[str] = None):
+async def ocr_upload_file(data: Item, file: UploadFile = File(...), ):
+    
     if (data == None):
         data = """{
             "invoice_item": "what is the item that charged",
@@ -49,9 +50,9 @@ async def ocr_upload_file(file: UploadFile = File(...), data: Optional[str] = No
 
 
 @app.post("/autmoate/multimodel/")
-async def multimodel_upload_file(file: UploadFile = File(...), data: Optional[str] = None):
-    if(data == None):
-        data = """{
+async def multimodel_upload_file(item: Item, file: UploadFile = File(...), ):
+    if(item.data == None):
+        item.data = """{
             "invoice_item": "what is the item that charged",
             "Amount": "how much does the invoice item cost in total",
             "Company_name": "company that issued the invoice",
@@ -65,7 +66,7 @@ async def multimodel_upload_file(file: UploadFile = File(...), data: Optional[st
     results = []
 
     mm.convert_pdf_to_images(file_path=path)
-    extract_data = mm.extract_structured_data(data)
+    extract_data = mm.extract_structured_data(item.data)
     json_data = json.loads(extract_data)
     if isinstance(json_data, list):
         results.extend(json_data) 

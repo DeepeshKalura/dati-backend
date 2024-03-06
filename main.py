@@ -3,11 +3,11 @@ from fastapi import FastAPI, UploadFile, File, Body
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from typing import Optional, Dict, Any
-import json
 
 from app.ocr import convert_pdf_to_images, extract_text_from_img, extract_structured_data
 from app.schema import Item
 import app.multimodel as mm
+from app.helper import standardize_json
 
 
 app = FastAPI()
@@ -39,7 +39,7 @@ async def multimodel_upload_file(item: str = Body(None) , file: UploadFile = Fil
     
     print(extract_data)
     try:
-        json_data = json.loads(extract_data)
+        json_data = standardize_json(extract_data)
     except Exception as e:
         return {"error": str(e)}
     
@@ -49,8 +49,6 @@ async def multimodel_upload_file(item: str = Body(None) , file: UploadFile = Fil
         results.append(json_data)
 
     return results
-
-
 
 @app.post("/autmoate/ocr/")
 async def ocr_upload_file(data: Item, file: UploadFile = File(...), ):
@@ -73,7 +71,7 @@ async def ocr_upload_file(data: Item, file: UploadFile = File(...), ):
     pdf_text_list = extract_text_from_img(pdf_image_list)
     
     extract_data = extract_structured_data(pdf_text_list, data)
-    json_data = json.loads(extract_data)
+    json_data = standardize_json(extract_data)
     if isinstance(json_data, list):
         results.extend(json_data) 
     else:

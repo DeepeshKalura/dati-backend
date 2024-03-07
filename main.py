@@ -1,8 +1,7 @@
-from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, UploadFile, File, Body
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from typing import Optional, Dict, Any
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.ocr import convert_pdf_to_images, extract_text_from_img, extract_structured_data
 from app.schema import Item
@@ -10,8 +9,17 @@ import app.multimodel as mm
 from app.helper import standardize_json
 
 
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="template"), name="static")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/",  response_class=FileResponse)
 async def read_root():
